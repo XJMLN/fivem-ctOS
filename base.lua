@@ -10,6 +10,10 @@ function stringsplit(inputstr, sep)
 	end
 	return t
 end
+function round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
+  return math.floor(num * mult + 0.5) / mult
+end
 -- @function ctos_createPed(NetID ped, PedType gender)
 -- Assign random data from config files to given NetID (Ped)
 function ctos_createPed(ped,gender)
@@ -38,6 +42,23 @@ function ctos_getPed(ped)
     TriggerClientEvent("ctos_client_returnPedData",source,PEDS[ped.netID])
 end
 
+-- @function ctos_injectBankAccount(netID pedID)
+-- Give player (source) cash for hacking ped bank account
+function ctos_injectBankAccount(pedID)
+    local source = source
+    if (PEDS[pedID].hacked) then return end
+    PEDS[pedID].hacked = true
+    local givenMoney = round(math.random(Config.peds.minHackCash,Config.peds.maxHackCash)/Config.peds.divHackCash,0)
+
+    -- Here insert code for adding money to player (source)
+    -- I dont want to use natives like StatSetInt because its kinda risky,
+    -- So if you wanna use it on public server add here code from framework u are using
+    -- or implement your own money script :)
+    -- After you save player money use trigger under this comment to inform player 
+    -- about amount of money that he was given or use ur own notification system for that
+
+    TriggerClientEvent("ctos_client_showNotification",source,givenMoney)
+end
 -- @function printError(String message)
 -- Print error message in server console
 function printError(message)
@@ -97,3 +118,6 @@ AddEventHandler("onResourceStart",ctos_startup)
 
 RegisterNetEvent("ctos_getPedData")
 AddEventHandler("ctos_getPedData",ctos_getPed)
+
+RegisterNetEvent("ctos_injectBankAccount")
+AddEventHandler("ctos_injectBankAccount",ctos_injectBankAccount)

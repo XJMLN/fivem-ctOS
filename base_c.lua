@@ -12,6 +12,9 @@ function GetPedInFront()
 	local _, _, _, _, ped = GetShapeTestResult(rayHandle)
 	return ped
 end
+
+-- @function GetVehicleInFront()
+-- Get Entity(Vehicle) in front of LocalPlayer
 function GetVehicleInFront()
     local plrPos = GetEntityCoords(PlayerPedId(),false)
     local plyOffset = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 1.3, 0.0)
@@ -20,6 +23,22 @@ function GetVehicleInFront()
     return vehicle
 end
 
+-- @function GetObjectInFront()
+-- Get Entity(Object) in front of LocalPlayer
+function GetObjectInFront()
+    return nil
+end
+
+function HighlightObject(object)
+    x, y, z = table.unpack(GetEntityCoords(object, true))
+    SetDrawOrigin(x, y, z, 0)
+    RequestStreamedTextureDict("helicopterhud", false)
+    DrawSprite("helicopterhud", "hud_corner", -0.01, -0.01, 0.006, 0.006, 0.0, 0, 195, 255, 255)
+    DrawSprite("helicopterhud", "hud_corner", 0.01, -0.01, 0.006, 0.006, 90.0, 0, 195, 255, 255)
+    DrawSprite("helicopterhud", "hud_corner", -0.01, 0.01, 0.006, 0.006, 270.0, 0, 195, 255, 255)
+    DrawSprite("helicopterhud", "hud_corner", 0.01, 0.01, 0.006, 0.006, 180.0, 0, 195, 255, 255)
+    ClearDrawOrigin()
+end
 --[[
     Thread for targetting entities
 ]]--
@@ -39,6 +58,7 @@ Citizen.CreateThread(function()
                     currentTarget = {element=ped,type='ped',netID=pedID,elementType=pedType}
                     
                     if (currentTarget.type == 'ped' and not LOCAL_PEDS[netID]) then
+                        
                         ctOS.initPersonProfile(currentTarget)
                     end
                 end
@@ -64,32 +84,45 @@ end)
 ]]--
 Citizen.CreateThread(function()
     while true do
+        local plrCoords = GetEntityCoords(PlayerPedId())
         if (inTargetingMode == 'ped') then
             local ped = GetPedInFront()
             local pedType = GetPedType(ped)
             if (ped>0) then
                 if (not Config.disallowed.pedTypes[pedType]) then
-                    local plrCoords = GetEntityCoords(PlayerPedId())
                     local pedCoords = GetEntityCoords(ped)
+                    Notifications.showHelp("Press ~INPUT_7A535563~ to hack bank account")
                     DrawLine(plrCoords.x,plrCoords.y,plrCoords.z+0.5,pedCoords.x,pedCoords.y,pedCoords.z,255,255,255,255)
+                    HighlightObject(ped)
                 end
+            end
+        end
+        if (inTargetingMode == 'object') then
+            local object = GetObjectInFront()
+            if (object~=0) then
+                local objCoords = GetEntityCoords(object)
+                DrawLine(plrCoords.x,plrCoords.y,plrCoords.z+0.5,objCoords.x,objCoords.y,objCoords.z,255,255,255,255)
+                HighlightObject(object)
             end
         end
         if (inTargetingMode == 'vehicle') then
             local vehicle = GetVehicleInFront()
             if (vehicle>0 and IsEntityAVehicle(vehicle)) then
-                local plrCoords = GetEntityCoords(PlayerPedId())
                 local vehCoords = GetEntityCoords(vehicle)
                 DrawLine(plrCoords.x,plrCoords.y,plrCoords.z+0.5,vehCoords.x,vehCoords.y,vehCoords.z,255,255,255,255)
+                HighlightObject(vehicle)
             end
         end
+
         Citizen.Wait(0)
     end
 end)
 
---[[
-    temp command for enabling targetting
-]]
+RegisterCommand("+ct_os_bankaccount",function() -- Wired with RegisterKeyMapping
+    if (currentTarget.type ~="ped") then return end
+    TriggerServerEvent("ctos_injectBankAccount",currentTarget.netID)
+end)
+
 RegisterCommand("target",function(_,args)
     local targetMode = string.lower(args[1])
     if (targetMode == "off") then
@@ -107,3 +140,5 @@ RegisterCommand("target",function(_,args)
         print("Provided wrong targetting mode")
     end
 end)
+
+RegisterKeyMapping("+ct_os_bankaccount","ctOS: Hack bank account of selected person","keyboard","g")

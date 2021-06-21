@@ -48,6 +48,13 @@ end
 Notifications.init = function()
     AddTextEntry("ctos_person","Works at ~a~\n~w~Age: ~b~~a~\n~w~Income: ~b~$~a~")
     AddTextEntry("ctos_vehicle","Model: ~b~~a~\n~w~Plate: ~b~~a~")
+    AddTextEntry("ctos_bank","Money wired: ~b~$~a~")
+end
+
+Notifications.showHelp = function(message)
+    SetTextComponentFormat("STRING")
+	AddTextComponentString(message)
+	DisplayHelpTextFromStringLabel(0, false, 1, 0)
 end
 
 -- @function ctOS.showPersonProfile(Array data)
@@ -81,6 +88,16 @@ ctOS.showVehicleProfile = function(data)
     EndTextCommandThefeedPostMessagetext("CHAR_CARSITE","CHAR_CARSITE",false,0,"Vehicle information","")
     EndTextCommandThefeedPostTicker(true,true)
 end
+
+-- @function ctOS.showBankInformation(Int givenMoney)
+-- Show notification above map filled with information about wired money from hacking bank account
+ctOS.showBankInformation = function(givenMoney)
+    if (not givenMoney) then return end
+    BeginTextCommandThefeedPost("ctos_bank")
+    AddTextComponentString(tostring(givenMoney))
+    EndTextCommandThefeedPostMessagetext("CHAR_BANK_MAZE","CHAR_BANK_MAZE",false,0,"Bank Account","")
+end
+
 -- @function ctOS.initPersonProfile(Array data)
 -- Used to load ped profile, if profile doesn't exist it will call server for generating data
 ctOS.initPersonProfile = function(data)
@@ -103,5 +120,9 @@ ctOS.initVehicleProfile = function(data)
     end
     ctOS.showVehicleProfile(LOCAL_VEHS[data.element])
 end
+
 RegisterNetEvent("ctos_client_returnPedData")
 AddEventHandler("ctos_client_returnPedData",ctOS.showPersonProfile)
+
+RegisterNetEvent("ctos_client_showNotification")
+AddEventHandler("ctos_client_showNotification",ctOS.showBankInformation)
