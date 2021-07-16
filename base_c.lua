@@ -85,35 +85,38 @@ end)
 Citizen.CreateThread(function()
     while true do
         local plrCoords = GetEntityCoords(PlayerPedId())
+        local targetCoords = false
+        local targetElement = nil
         if (inTargetingMode == 'ped') then
             local ped = GetPedInFront()
             local pedType = GetPedType(ped)
             if (ped>0) then
                 if (not Config.disallowed.pedTypes[pedType]) then
-                    local pedCoords = GetEntityCoords(ped)
+                    targetCoords = GetEntityCoords(ped)
+                    targetElement = ped
                     Notifications.showHelp("Press ~INPUT_7A535563~ to hack bank account")
-                    DrawLine(plrCoords.x,plrCoords.y,plrCoords.z+0.5,pedCoords.x,pedCoords.y,pedCoords.z,255,255,255,255)
-                    HighlightObject(ped)
                 end
             end
         end
         if (inTargetingMode == 'object') then
             local object = GetObjectInFront()
             if (object~=0) then
-                local objCoords = GetEntityCoords(object)
-                DrawLine(plrCoords.x,plrCoords.y,plrCoords.z+0.5,objCoords.x,objCoords.y,objCoords.z,255,255,255,255)
-                HighlightObject(object)
+                targetCoords = GetEntityCoords(object)
+                targetElement = object
             end
         end
         if (inTargetingMode == 'vehicle') then
             local vehicle = GetVehicleInFront()
             if (vehicle>0 and IsEntityAVehicle(vehicle)) then
-                local vehCoords = GetEntityCoords(vehicle)
-                DrawLine(plrCoords.x,plrCoords.y,plrCoords.z+0.5,vehCoords.x,vehCoords.y,vehCoords.z,255,255,255,255)
-                HighlightObject(vehicle)
+                targetCoords = GetEntityCoords(vehicle)
+                targetElement = vehicle
             end
         end
 
+        if (targetCoords and targetElement) then
+            DrawLine(plrCoords.x,plrCoords.y,plrCoords.z+0.5,targetCoords.x,targetCoords.y,targetCoords.z,255,255,255,255)
+            HighlightObject(targetElement)
+        end
         Citizen.Wait(0)
     end
 end)
